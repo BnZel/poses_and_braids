@@ -1,3 +1,4 @@
+import enum
 from __init__ import *
 
 class Braid(QWidget):
@@ -15,7 +16,6 @@ class Braid(QWidget):
         self.ax = self.figure.add_subplot(111)
 
         # from set pose estimation connections
-        # 0 1 1 2 2 3 0 4 4 5 5 6 0 7 7 8 8 9 9 10 8 11 11 12 12 13 8 14 14 15 15 16
         self.connection = [
         [0, 1], [1, 2], [2, 3], [0, 4], [4, 5], [5, 6], [0, 7], [7, 8],
         [8, 9], [9, 10], [8, 11], [11, 12], [12, 13], [8, 14], [14, 15],
@@ -23,6 +23,10 @@ class Braid(QWidget):
 
         self.lines = {}
         self.crossings = []
+        self.save_keypoints = defaultdict(list)
+        self.save_flatten_keypoints = defaultdict(list)
+        self.k = 0
+        self.kf = 0
 
         # ----------left layout----------
         self.leftDisplay = QWidget()
@@ -50,6 +54,7 @@ class Braid(QWidget):
         self.layoutLeftItems = QGridLayout(self)
 
         # widgets 
+
         # self.txtCrossings = QTextEdit(self)
         # self.btnCrossings = QPushButton("Submit crossing values",self)
         # self.btnCrossings.clicked.connect(self.getCrossings)
@@ -62,31 +67,57 @@ class Braid(QWidget):
         self.btnClearCrossings.clicked.connect(self.clearCrossings)
         self.btnClearCrossings.setDisabled(True)
 
+        # keypoints table
+        self.lblKeypoints = QLabel(self)
+        self.lblKeypoints.setFont(QFont('Bold',15))
+        self.lblKeypoints.setText("Keypoints")
+        self.tableKeypoints = QTableWidget(self)
+        self.tableKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+
         # add widgets
         self.layoutLeftItems.addWidget(self.btnUpload,1,0)
         self.layoutLeftItems.addWidget(self.btnClearCrossings,1,1)
+        self.layoutLeftItems.addWidget(self.lblKeypoints,2,0)
+        self.layoutLeftItems.addWidget(self.tableKeypoints,3,0)
+
         # self.layoutLeftItems.addWidget(self.txtCrossings,2,0)
         # self.layoutLeftItems.addWidget(self.btnCrossings,2,1)
-
+        
         self.layoutLeftItems.setRowStretch(4,1)
         self.leftItems.setLayout(self.layoutLeftItems)
 
         # ----------right layout----------
-        self.rightLayout = QVBoxLayout()
-        self.rightDisplay = QWidget()
+        self.rightLayout = QVBoxLayout(self)
+        self.rightDisplay = QWidget(self)
+
+        # flatten keypoints table 
+        self.lblFlattenKeypoints = QLabel(self)
+        self.lblFlattenKeypoints.setFont(QFont('Bold',15))
+        self.lblFlattenKeypoints.setText("Flattened Keypoints")
+        self.tableFlattenKeypoints = QTableWidget(self)
+        self.tableFlattenKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+
+        self.rightItems = QWidget(self)
+        self.layoutRightItems = QGridLayout(self)
+        self.layoutRightItems.addWidget(self.lblFlattenKeypoints,2,0)
+        self.layoutRightItems.addWidget(self.tableFlattenKeypoints,3,0)
+        self.rightItems.setLayout(self.layoutRightItems)
 
         self.rightLayout.addWidget(self.canvas)
+        self.rightLayout.addWidget(self.rightItems)
         self.rightDisplay.setLayout(self.rightLayout)
 
-        self.mainLayout.addWidget(self.leftDisplay,0,0)
-        self.mainLayout.addWidget(self.leftItems,1,0)
-        self.mainLayout.addWidget(self.rightDisplay,0,1)
+        self.layoutRightItems.setRowStretch(4,1)
 
         model = 'mobilenet_thin'
         self.w, self.h = model_wh('432x368')
         self.e = TfPoseEstimator(get_graph_path(model), target_size=(self.w,self.h))
         self.poseLifting = Prob3dPose('./lifting/models/prob_model_params.mat')
 
+        self.mainLayout.addWidget(self.leftDisplay,0,0)
+        self.mainLayout.addWidget(self.leftItems,1,0)
+        self.mainLayout.addWidget(self.rightDisplay,0,1)
+        self.mainLayout.addWidget(self.rightItems,1,1)
         self.setLayout(self.mainLayout)
 
     # def getCrossings(self):
@@ -105,6 +136,41 @@ class Braid(QWidget):
     #         warn_dialog.setWindowTitle("Input Error")
     #         warn_dialog.setText("Input must be integers")
     #         warn_dialog.exec()
+
+    def saveKeypoints(self, kp):
+        print("saving keypoints...")
+
+        self.save_keypoints.update({self.k:kp})
+        self.k += 1
+
+        # update to table
+        row_count = (len(self.save_keypoints))
+        col_count = (len(self.save_keypoints[0]))
+
+        print("row length: ",row_count,", column length: ",col_count)
+
+        self.tableKeypoints.setRowCount(row_count)
+        self.tableKeypoints.setColumnCount(col_count)
+
+        for row in range(row_count):
+            for col in range(col_count):
+                item = (list(self.save_keypoints[row])[col])
+                self.tableKeypoints.setItem(row,col,QTableWidgetItem(str(item)))
+
+    def saveFlattenedKeypoints(self, kp):
+        print("saving flattened keypoints...")
+
+        self.save_flatten_keypoints.update({self.k:kp})
+        self.kf += 1
+
+        # update to table
+        row_count = (len(self.save_flatten_keypoints))
+        col_count = (len(self.save_flatten_keypoints[0]))
+
+        for row in range(row_count):
+            for col in range(col_count):
+                item = (list(self.save_flatten_keypoints[row])[col])
+                self.tableKeypoints.setItem(row,col,QTableWidgetItem(str(item)))
 
     def uploadFile(self):
         options = QFileDialog.Options()
@@ -135,10 +201,13 @@ class Braid(QWidget):
             )
             self.windowLeft.addItem(self.lines[n])
 
+        self.saveKeypoints(kp)
+
         int_key = np.array(kp,dtype=np.int)
         flatten_keypoints = np.concatenate(int_key).ravel().tolist() 
-
         print(flatten_keypoints)
+
+        self.saveFlattenedKeypoints([flatten_keypoints])
 
         self.crossings = self.valid_crossings(flatten_keypoints)
         self.n = self.valid_number_of_strands(None)

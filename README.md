@@ -114,7 +114,7 @@ Using dictionaries to save keypoints (flatten keypoints will be explained later)
 In theory, I have noted that a set of matrices either from the pose or braids could be translated bi-directionally. However with the limited knowledge I have in this subject, in a practical sense...:
 ```python
         # in plotPose() function
-        # as the visualization only accepts integers (labeled as  sigmas) as integers
+        # as the visualization only accepts integers (labeled as sigmas) as integers
         # I decided to take the keypoints and converted it
         # as well as turning it into a single list 
         # from there I use the avaliable methods written by Denbox
@@ -186,4 +186,7 @@ In theory, I have noted that a set of matrices either from the pose or braids co
 ![Demo 2](https://github.com/BnZel/poses_and_braids/blob/master/demo/demo2.png)
 ![Demo 3](https://github.com/BnZel/poses_and_braids/blob/master/demo/demo3.PNG)
 
-
+## Conclusion
+* With the latest progress, perhaps if anyone comes across this repo. It would be appreciated to continue adding and fixing this project
+* I realize that in theory, it will be difficult to put over practially due to certain limitations whether it may be knowledge, hardware, or software.
+* Overall a rather interesting concept that I've been thinking about

@@ -53,11 +53,6 @@ class Braid(QWidget):
         self.layoutLeftItems = QGridLayout(self)
 
         # widgets 
-
-        # self.txtCrossings = QTextEdit(self)
-        # self.btnCrossings = QPushButton("Submit crossing values",self)
-        # self.btnCrossings.clicked.connect(self.getCrossings)
-
         self.btnUpload = QPushButton("Upload Image",self)
         self.btnUpload.clicked.connect(self.uploadFile)  
         self.btnUpload.setDisabled(False)
@@ -79,9 +74,6 @@ class Braid(QWidget):
         self.layoutLeftItems.addWidget(self.lblKeypoints,2,0)
         self.layoutLeftItems.addWidget(self.listKeypoints,3,0)
 
-        # self.layoutLeftItems.addWidget(self.txtCrossings,2,0)
-        # self.layoutLeftItems.addWidget(self.btnCrossings,2,1)
-        
         self.layoutLeftItems.setRowStretch(4,1)
         self.leftItems.setLayout(self.layoutLeftItems)
 
@@ -118,24 +110,6 @@ class Braid(QWidget):
         self.mainLayout.addWidget(self.rightDisplay,0,1)
         self.mainLayout.addWidget(self.rightItems,1,1)
         self.setLayout(self.mainLayout)
-
-    # def getCrossings(self):
-    #     input = self.txtCrossings.toPlainText()
-    #     try:
-    #         self.cross = [int(float(item)) for item in input.split()]  
-    #         print(f'crossings: {self.cross} , {type(self.cross)}')
-
-    #         self.crossings = self.valid_crossings(self.cross)
-    #         self.n = self.valid_number_of_strands(None)
-    #         self.strand_positions = self.compute_strand_paths()
-    #         self.draw()
-    #         self.btnClearCrossings.setDisabled(False)
-    #     except ValueError:
-    #         warn_dialog = QMessageBox(self)
-    #         warn_dialog.setWindowTitle("Input Error")
-    #         warn_dialog.setText("Input must be integers")
-    #         warn_dialog.exec()
-
 
     def uploadFile(self):
         options = QFileDialog.Options()
@@ -190,7 +164,7 @@ class Braid(QWidget):
         for key, values in self.save_keypoints.items():
                 self.listKeypoints.clear()
                 print(key, values)
-                self.listKeypoints.addItems([str(key),str(values)])
+                self.listKeypoints.addItem(str(values))
 
         self.k += 1
 
@@ -202,7 +176,7 @@ class Braid(QWidget):
         for key, values in self.save_flatten_keypoints.items():
             self.listFlattenKeypoints.clear()
             print(key, values)
-            self.listFlattenKeypoints.addItems([str(key),str(values)])
+            self.listFlattenKeypoints.addItem(str(values))
         
         self.kf += 1
 

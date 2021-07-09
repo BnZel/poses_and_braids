@@ -1,4 +1,3 @@
-import enum
 from __init__ import *
 
 class Braid(QWidget):
@@ -67,18 +66,18 @@ class Braid(QWidget):
         self.btnClearCrossings.clicked.connect(self.clearCrossings)
         self.btnClearCrossings.setDisabled(True)
 
-        # keypoints table
+        # keypoints list
         self.lblKeypoints = QLabel(self)
         self.lblKeypoints.setFont(QFont('Bold',15))
         self.lblKeypoints.setText("Keypoints")
-        self.tableKeypoints = QTableWidget(self)
-        self.tableKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.listKeypoints = QListWidget(self)
+        self.listKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
 
         # add widgets
         self.layoutLeftItems.addWidget(self.btnUpload,1,0)
         self.layoutLeftItems.addWidget(self.btnClearCrossings,1,1)
         self.layoutLeftItems.addWidget(self.lblKeypoints,2,0)
-        self.layoutLeftItems.addWidget(self.tableKeypoints,3,0)
+        self.layoutLeftItems.addWidget(self.listKeypoints,3,0)
 
         # self.layoutLeftItems.addWidget(self.txtCrossings,2,0)
         # self.layoutLeftItems.addWidget(self.btnCrossings,2,1)
@@ -90,17 +89,17 @@ class Braid(QWidget):
         self.rightLayout = QVBoxLayout(self)
         self.rightDisplay = QWidget(self)
 
-        # flatten keypoints table 
+        # flatten keypoints list 
         self.lblFlattenKeypoints = QLabel(self)
         self.lblFlattenKeypoints.setFont(QFont('Bold',15))
         self.lblFlattenKeypoints.setText("Flattened Keypoints")
-        self.tableFlattenKeypoints = QTableWidget(self)
-        self.tableFlattenKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.listFlattenKeypoints = QListWidget(self)
+        self.listFlattenKeypoints.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
 
         self.rightItems = QWidget(self)
         self.layoutRightItems = QGridLayout(self)
         self.layoutRightItems.addWidget(self.lblFlattenKeypoints,2,0)
-        self.layoutRightItems.addWidget(self.tableFlattenKeypoints,3,0)
+        self.layoutRightItems.addWidget(self.listFlattenKeypoints,3,0)
         self.rightItems.setLayout(self.layoutRightItems)
 
         self.rightLayout.addWidget(self.canvas)
@@ -137,40 +136,6 @@ class Braid(QWidget):
     #         warn_dialog.setText("Input must be integers")
     #         warn_dialog.exec()
 
-    def saveKeypoints(self, kp):
-        print("saving keypoints...")
-
-        self.save_keypoints.update({self.k:kp})
-        self.k += 1
-
-        # update to table
-        row_count = (len(self.save_keypoints))
-        col_count = (len(self.save_keypoints[0]))
-
-        print("row length: ",row_count,", column length: ",col_count)
-
-        self.tableKeypoints.setRowCount(row_count)
-        self.tableKeypoints.setColumnCount(col_count)
-
-        for row in range(row_count):
-            for col in range(col_count):
-                item = (list(self.save_keypoints[row])[col])
-                self.tableKeypoints.setItem(row,col,QTableWidgetItem(str(item)))
-
-    def saveFlattenedKeypoints(self, kp):
-        print("saving flattened keypoints...")
-
-        self.save_flatten_keypoints.update({self.k:kp})
-        self.kf += 1
-
-        # update to table
-        row_count = (len(self.save_flatten_keypoints))
-        col_count = (len(self.save_flatten_keypoints[0]))
-
-        for row in range(row_count):
-            for col in range(col_count):
-                item = (list(self.save_flatten_keypoints[row])[col])
-                self.tableKeypoints.setItem(row,col,QTableWidgetItem(str(item)))
 
     def uploadFile(self):
         options = QFileDialog.Options()
@@ -207,7 +172,7 @@ class Braid(QWidget):
         flatten_keypoints = np.concatenate(int_key).ravel().tolist() 
         print(flatten_keypoints)
 
-        self.saveFlattenedKeypoints([flatten_keypoints])
+        self.saveFlattenedKeypoints(flatten_keypoints)
 
         self.crossings = self.valid_crossings(flatten_keypoints)
         self.n = self.valid_number_of_strands(None)
@@ -215,6 +180,31 @@ class Braid(QWidget):
         self.draw()
 
         self.btnClearCrossings.setDisabled(False)
+
+    def saveKeypoints(self, kp):
+        print("saving keypoints...")
+
+        self.save_keypoints.update({self.k:kp})
+        
+        # update to list
+        for key, values in self.save_keypoints.items():
+                self.listKeypoints.clear()
+                print(key, values)
+                self.listKeypoints.addItems([str(key),str(values)])
+
+        self.k += 1
+
+    def saveFlattenedKeypoints(self, kp):
+        print("saving flattened keypoints...")
+
+        self.save_flatten_keypoints.update({self.k:kp})
+
+        for key, values in self.save_flatten_keypoints.items():
+            self.listFlattenKeypoints.clear()
+            print(key, values)
+            self.listFlattenKeypoints.addItems([str(key),str(values)])
+        
+        self.kf += 1
 
     def mesh(self, image):
         image_h, image_w = image.shape[:2]
@@ -251,6 +241,8 @@ class Braid(QWidget):
 
         self.ax.clear()
         self.canvas.draw()
+        self.listKeypoints.clear()
+        self.listFlattenKeypoints.clear()
 
         pts = self.windowLeft.removeItem(self.points)
         lns = self.lines
